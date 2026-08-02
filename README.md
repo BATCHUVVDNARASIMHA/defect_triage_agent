@@ -72,15 +72,18 @@ logged to MLflow:
 
 | Mode  | Severity accuracy | Route accuracy | Human-review accuracy |
 |-------|-------------------|-----------------|------------------------|
-| Buggy | 0%                 | 83%             | 83%                    |
+| Buggy | 0%                 | 100%            | 100%                   |
 | Fixed | 100%               | 100%            | 100%                   |
 
 The buggy mode isn't just "worse" — it's wrong on every single severity
 call, because the reference guide's phrasing consistently contradicts the
 real policy (it downplays a genuinely critical surface crack as "cosmetic,"
-and overcorrects a minor edge nick to "always scrap"). That's deliberate:
-a project that shows a small improvement is a weaker proof than one that
-shows the failure mode is real and the fix is complete.
+and overcorrects a minor edge nick to "always scrap"). Route and human-review
+accuracy hold at 100% in both modes on this eval set — the routing and
+escalation logic downstream isn't what's broken, the severity call feeding
+into it is. That's deliberate: a project that shows a small improvement is
+a weaker proof than one that shows the failure mode is real and the fix is
+complete.
 
 ## Running it yourself
 

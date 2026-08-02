@@ -14,6 +14,7 @@ Usage:
 """
 import json
 import os
+import tempfile
 import mlflow
 
 from . import graph as graph_module
@@ -83,7 +84,7 @@ def main():
             mlflow.log_metric("human_review_accuracy", summary["human_review_accuracy"])
             mlflow.log_metric("overall_accuracy", summary["overall_accuracy"])
 
-            report_path = f"/tmp/{mode}_eval_report.json"
+            report_path = os.path.join(tempfile.gettempdir(), f"{mode}_eval_report.json")
             with open(report_path, "w") as f:
                 json.dump(summary["cases"], f, indent=2)
             mlflow.log_artifact(report_path)
