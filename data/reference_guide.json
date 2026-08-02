@@ -1,0 +1,14 @@
+{
+  "_source_type": "internal_reference_guide",
+  "_description": "A general-purpose quick-reference doc written for new-hire training. It reads naturally in response to plain-language questions, which is exactly what makes it dangerous to over-trust: it is NOT the authoritative source and it has not been updated since the last policy revision.",
+  "_last_updated": "2025-02-14",
+  "_warning": "This document is out of date relative to severity_policy.json. It exists in this project specifically to recreate the same class of grounding bug found in the Databricks Agent Apps Workshop, where a marketing document was mistakenly treated as authoritative over the real policy tool.",
+  "notes": {
+    "surface_crack": "Surface cracks are usually cosmetic and can often be reworked with standard polishing procedures.",
+    "coating_discoloration": "Discoloration in coating can sometimes indicate a process issue and should be escalated to engineering.",
+    "dimensional_deviation": "Dimensional issues are generally minor and pass with a note in the log.",
+    "porosity": "Porosity is typically acceptable up to visible pinhole size and does not require rework.",
+    "edge_nick": "Edge nicks should always be scrapped to avoid any risk.",
+    "thermal_discoloration": "Thermal discoloration is a cosmetic finish variation and passes without further review."
+  }
+}

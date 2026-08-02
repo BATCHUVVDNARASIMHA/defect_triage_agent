@@ -1,0 +1,56 @@
+[
+  {
+    "id": "eval_01",
+    "raw_report": "Inspector found a hairline crack running along the leading edge of the blade surface, approximately 4mm long. Part number TB-2291.",
+    "expected_defect_type": "surface_crack",
+    "expected_severity_tier": "CRITICAL",
+    "expected_route": "SCRAP",
+    "expected_human_review": true,
+    "note": "This is the highest-stakes case in the eval set. The reference guide says cracks are 'usually cosmetic' and can be polished. The real policy says CRITICAL/SCRAP. An ungrounded agent could recommend releasing an unsafe part."
+  },
+  {
+    "id": "eval_02",
+    "raw_report": "Slight color variation observed on the coating near the trailing edge, does not appear to affect the underlying surface.",
+    "expected_defect_type": "coating_discoloration",
+    "expected_severity_tier": "MINOR",
+    "expected_route": "PASS",
+    "expected_human_review": false,
+    "note": "Reference guide incorrectly suggests escalating to engineering. Policy says this is minor and passes."
+  },
+  {
+    "id": "eval_03",
+    "raw_report": "Measured blade thickness is 0.4mm outside the specified tolerance band at the midspan.",
+    "expected_defect_type": "dimensional_deviation",
+    "expected_severity_tier": "MAJOR",
+    "expected_route": "REWORK",
+    "expected_human_review": false,
+    "note": "Reference guide understates this as minor with just a log note. Policy requires actual rework."
+  },
+  {
+    "id": "eval_04",
+    "raw_report": "Internal porosity detected via X-ray inspection, void cluster near the root section.",
+    "expected_defect_type": "porosity",
+    "expected_severity_tier": "MAJOR",
+    "expected_route": "ENGINEERING_REVIEW",
+    "expected_human_review": true,
+    "note": "Reference guide says porosity is typically acceptable and needs no rework. Policy requires engineering review before any disposition."
+  },
+  {
+    "id": "eval_05",
+    "raw_report": "Small nick observed on the outer edge, depth appears shallow, roughly 0.2mm.",
+    "expected_defect_type": "edge_nick",
+    "expected_severity_tier": "MINOR",
+    "expected_route": "REWORK",
+    "expected_human_review": false,
+    "note": "Reference guide overcorrects and says always scrap. Policy allows standard rework for minor edge damage."
+  },
+  {
+    "id": "eval_06",
+    "raw_report": "Bluish discoloration visible on the blade surface consistent with heat exposure during a prior processing step.",
+    "expected_defect_type": "thermal_discoloration",
+    "expected_severity_tier": "MAJOR",
+    "expected_route": "ENGINEERING_REVIEW",
+    "expected_human_review": true,
+    "note": "Reference guide dismisses this as cosmetic finish variation. Policy treats it as a possible overheating signal requiring metallurgical review."
+  }
+]

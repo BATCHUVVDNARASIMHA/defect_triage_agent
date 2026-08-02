@@ -1,0 +1,43 @@
+{
+  "_source_type": "authoritative_policy",
+  "_description": "Canonical severity matrix. This is the single source of truth for disposition decisions. Any other document that disagrees with this one is out of date and must not be used for disposition.",
+  "_last_updated": "2026-06-01",
+  "defect_types": {
+    "surface_crack": {
+      "severity_tier": "CRITICAL",
+      "route": "SCRAP",
+      "requires_human_review": true,
+      "rationale": "Surface cracks in load-bearing components propagate under cyclic stress and cannot be reworked safely."
+    },
+    "coating_discoloration": {
+      "severity_tier": "MINOR",
+      "route": "PASS",
+      "requires_human_review": false,
+      "rationale": "Cosmetic coating variance within accepted tolerance. No structural impact."
+    },
+    "dimensional_deviation": {
+      "severity_tier": "MAJOR",
+      "route": "REWORK",
+      "requires_human_review": false,
+      "rationale": "Out-of-tolerance dimensions can typically be corrected via rework without compromising part integrity."
+    },
+    "porosity": {
+      "severity_tier": "MAJOR",
+      "route": "ENGINEERING_REVIEW",
+      "requires_human_review": true,
+      "rationale": "Internal porosity requires engineering assessment to determine if it falls within acceptable void-content limits."
+    },
+    "edge_nick": {
+      "severity_tier": "MINOR",
+      "route": "REWORK",
+      "requires_human_review": false,
+      "rationale": "Minor edge damage correctable via standard rework procedure, provided depth is below the documented threshold."
+    },
+    "thermal_discoloration": {
+      "severity_tier": "MAJOR",
+      "route": "ENGINEERING_REVIEW",
+      "requires_human_review": true,
+      "rationale": "Thermal discoloration can indicate overheating during processing and requires metallurgical review before disposition."
+    }
+  }
+}

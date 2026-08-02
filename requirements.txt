@@ -1,0 +1,10 @@
+anthropic==0.120.2
+langchain-core==1.5.3
+langchain-protocol==0.0.18
+langgraph==1.2.10
+langgraph-checkpoint==4.1.1
+langgraph-prebuilt==1.1.0
+langgraph-sdk==0.4.2
+mlflow==3.15.0
+mlflow-skinny==3.15.0
+mlflow-tracing==3.15.0
