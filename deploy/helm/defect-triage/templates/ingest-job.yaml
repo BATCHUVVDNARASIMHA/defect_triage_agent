@@ -1,0 +1,51 @@
+{{- if .Values.ingestJob.enabled }}
+# Runs BEFORE the Deployment on install and upgrade, so pods never come up
+# against an empty knowledge base. It doesn't use the ConfigMap because
+# pre-install hooks run before the release's own resources exist.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "defect-triage.fullname" . }}-ingest
+  labels:
+    {{- include "defect-triage.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ingest
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: {{ .Values.ingestJob.backoffLimit }}
+  activeDeadlineSeconds: {{ .Values.ingestJob.activeDeadlineSeconds }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "defect-triage.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: ingest
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: ingest
+          image: {{ include "defect-triage.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["python", "-m", "src.ingest"]
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          env:
+            {{- range $key, $value := .Values.config }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.existingSecret }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+{{- end }}

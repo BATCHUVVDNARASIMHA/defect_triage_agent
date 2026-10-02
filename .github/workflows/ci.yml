@@ -1,0 +1,99 @@
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  test:
+    name: tests + eval gate
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: triage
+          POSTGRES_PASSWORD: triage
+          POSTGRES_DB: triage
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U triage -d triage"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      TEST_DATABASE_URL: postgresql://triage:triage@localhost:5432/triage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-*.txt
+      - run: pip install -r requirements-dev.txt
+      - name: Unit + pgvector integration tests
+        run: pytest -q
+      - name: Evaluation release gate (fails the build if the grounding fix regresses)
+        run: python -m src.eval_gate
+
+  manifests:
+    name: helm + terraform checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - name: Helm lint and render
+        run: |
+          helm lint deploy/helm/defect-triage
+          helm template defect-triage deploy/helm/defect-triage > rendered.yaml
+          helm template defect-triage deploy/helm/defect-triage -f deploy/helm/defect-triage/values-kind.yaml > rendered-kind.yaml
+      - name: Validate rendered manifests against the Kubernetes schema
+        run: |
+          curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz | tar xz
+          ./kubeconform -strict -summary rendered.yaml rendered-kind.yaml deploy/k8s/pgvector-dev.yaml
+      - uses: hashicorp/setup-terraform@v3
+      - name: Terraform fmt and validate
+        working-directory: deploy/terraform/aws
+        run: |
+          terraform fmt -check -recursive
+          terraform init -backend=false -input=false
+          terraform validate
+
+  docker:
+    name: build, smoke test, publish
+    needs: [test, manifests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Image name (GHCR needs lowercase)
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+      - uses: docker/setup-buildx-action@v3
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Smoke test the container
+        run: |
+          docker run -d --name smoke -p 8000:8000 "$IMAGE:${{ github.sha }}"
+          for i in $(seq 1 30); do curl -fsS localhost:8000/readyz && break; sleep 2; done
+          curl -fsS localhost:8000/v1/triage -H 'content-type: application/json' \
+            -d '{"raw_report": "Hairline crack along the leading edge, 4mm long.", "mode": "fixed"}' | tee out.json
+          python3 -c "import json; r=json.load(open('out.json')); assert r['severity_tier']=='CRITICAL', r; assert all(c['authoritative'] for c in r['citations']), r"
+          docker logs smoke | tail -20
+      - name: Publish to GHCR
+        if: github.event_name == 'push'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker tag "$IMAGE:${{ github.sha }}" "$IMAGE:${GITHUB_REF_NAME//\//-}"
+          docker push "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:${GITHUB_REF_NAME//\//-}"

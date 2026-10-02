@@ -3,3 +3,11 @@ __pycache__/
 *.pyc
 .env
 mlruns/
+.pytest_cache/
+.venv/
+# Terraform
+deploy/terraform/**/.terraform/
+deploy/terraform/**/*.tfstate
+deploy/terraform/**/*.tfstate.*
+deploy/terraform/**/*.tfvars
+!deploy/terraform/**/*.tfvars.example

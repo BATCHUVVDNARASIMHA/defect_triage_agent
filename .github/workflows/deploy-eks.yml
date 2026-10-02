@@ -1,0 +1,62 @@
+name: deploy-eks
+
+# Manual deploy to the EKS cluster created by deploy/terraform/aws.
+# One-time setup in the repo settings:
+#   secrets.AWS_ROLE_ARN        terraform output github_actions_role_arn
+#   vars.AWS_REGION             e.g. us-west-2
+#   vars.EKS_CLUSTER_NAME       terraform output cluster_name
+#   vars.ECR_REPOSITORY         terraform output ecr_repository_name
+# and create the namespace + secret once (see README, "Deploy to AWS EKS").
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # OIDC: no long-lived AWS keys stored in GitHub
+  contents: read
+
+concurrency: deploy-eks
+
+env:
+  NAMESPACE: defect-triage
+  RELEASE: defect-triage
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push to ECR
+        env:
+          IMAGE: ${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}:${{ github.sha }}
+        run: |
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+
+      - uses: azure/setup-helm@v4
+
+      - name: Deploy with Helm (rolls back automatically if the rollout fails)
+        run: |
+          aws eks update-kubeconfig --name "${{ vars.EKS_CLUSTER_NAME }}" --region "${{ vars.AWS_REGION }}"
+          helm upgrade --install "$RELEASE" deploy/helm/defect-triage \
+            --namespace "$NAMESPACE" \
+            -f deploy/helm/defect-triage/values-eks.yaml \
+            --set image.repository="${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}" \
+            --set image.tag="${{ github.sha }}" \
+            --atomic --wait --timeout 10m
+
+      - name: Smoke test through the service
+        run: |
+          kubectl -n "$NAMESPACE" rollout status deployment/"$RELEASE" --timeout=5m
+          kubectl -n "$NAMESPACE" port-forward svc/"$RELEASE" 8080:80 >/dev/null 2>&1 &
+          sleep 5
+          curl -fsS localhost:8080/readyz

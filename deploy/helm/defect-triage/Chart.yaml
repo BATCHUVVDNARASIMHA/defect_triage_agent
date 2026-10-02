@@ -1,0 +1,6 @@
+apiVersion: v2
+name: defect-triage
+description: Defect Triage Agent API (LangGraph multi-agent workflow) with pgvector retrieval and LangSmith tracing
+type: application
+version: 0.1.0
+appVersion: "1.1.0"
