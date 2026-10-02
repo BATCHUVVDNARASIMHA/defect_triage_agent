@@ -1,0 +1,52 @@
+# Local stack: Postgres + pgvector, a one-shot ingest job, and the API.
+#   cp .env.example .env   # optional: add ANTHROPIC_API_KEY / LANGSMITH_API_KEY
+#   docker compose up --build
+#   curl -s localhost:8000/v1/triage -H 'content-type: application/json' \
+#        -d '{"raw_report": "Hairline crack on the leading edge, 4mm.", "mode": "fixed"}'
+x-app-env: &app-env
+  DATABASE_URL: postgresql://triage:triage@db:5432/triage
+  VECTOR_BACKEND: pgvector
+  EMBEDDINGS_PROVIDER: fastembed
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-6}
+  LANGSMITH_TRACING: ${LANGSMITH_TRACING:-false}
+  LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:-}
+  LANGSMITH_PROJECT: ${LANGSMITH_PROJECT:-defect-triage}
+  API_AUTH_TOKEN: ${API_AUTH_TOKEN:-}
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: triage
+      POSTGRES_PASSWORD: triage   # local development only
+      POSTGRES_DB: triage
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U triage -d triage"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  ingest:
+    build: .
+    command: ["python", "-m", "src.ingest"]
+    environment: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment: *app-env
+    depends_on:
+      ingest:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata: {}
