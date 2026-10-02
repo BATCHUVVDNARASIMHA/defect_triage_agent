@@ -1,0 +1,7 @@
+Defect Triage Agent is deployed as {{ include "defect-triage.fullname" . }} in namespace {{ .Release.Namespace }}.
+
+Try it:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "defect-triage.fullname" . }} 8080:{{ .Values.service.port }}
+  curl -s localhost:8080/readyz
+  curl -s localhost:8080/v1/triage -H 'content-type: application/json' -H "X-API-Key: $API_AUTH_TOKEN" \
+       -d '{"raw_report": "Hairline crack along the leading edge, 4mm long.", "mode": "fixed"}'

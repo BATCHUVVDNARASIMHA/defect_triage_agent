@@ -1,0 +1,9 @@
+# AWS EKS. image.repository and image.tag are set by the deploy workflow (ECR).
+replicaCount: 2
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+config:
+  LANGSMITH_TRACING: "true"

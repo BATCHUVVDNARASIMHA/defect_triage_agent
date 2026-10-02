@@ -1,0 +1,8 @@
+# Copy to terraform.tfvars and adjust. terraform.tfvars is gitignored.
+region             = "us-west-2"
+cluster_name       = "defect-triage"
+node_instance_type = "t3.medium"
+node_desired_size  = 2
+db_instance_class  = "db.t4g.micro"
+github_repository  = "BATCHUVVDNARASIMHA/defect_triage_agent"
+# create_github_oidc_provider = false   # if your account already has it

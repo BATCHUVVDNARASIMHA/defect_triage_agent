@@ -1,0 +1,78 @@
+# Default values for the Defect Triage Agent chart.
+replicaCount: 2
+
+image:
+  repository: ghcr.io/batchuvvdnarasimha/defect_triage_agent
+  tag: ""                 # defaults to the chart appVersion
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+# Non-secret configuration, rendered into a ConfigMap (and into the ingest Job's env).
+config:
+  VECTOR_BACKEND: pgvector
+  EMBEDDINGS_PROVIDER: fastembed
+  ANTHROPIC_MODEL: claude-sonnet-4-6
+  LANGSMITH_TRACING: "true"
+  LANGSMITH_PROJECT: defect-triage
+  MAX_REPORT_CHARS: "4000"
+  LOG_LEVEL: INFO
+  UVICORN_WORKERS: "1"
+
+# Secrets are never stored in the chart. Create this Secret out of band
+# (see README) with the keys:
+#   DATABASE_URL, ANTHROPIC_API_KEY, LANGSMITH_API_KEY, API_AUTH_TOKEN
+existingSecret: defect-triage-secrets
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Loads the knowledge base into pgvector before the pods start, on every
+# install and upgrade. Pods report ready only once the data is there.
+ingestJob:
+  enabled: true
+  backoffLimit: 4
+  activeDeadlineSeconds: 600
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
