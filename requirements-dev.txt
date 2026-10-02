@@ -1,0 +1,4 @@
+# What CI installs: the runtime plus the test tools (no MLflow, to keep CI fast).
+-r requirements-api.txt
+pytest==9.1.1
+httpx==0.28.1
