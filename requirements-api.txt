@@ -1,0 +1,14 @@
+# Runtime dependencies for the API service and the ingest job (what the Docker image installs).
+anthropic==0.120.2
+langchain-core==1.5.3
+langchain-protocol==0.0.18
+langgraph==1.2.10
+langgraph-checkpoint==4.1.1
+langgraph-prebuilt==1.1.0
+langgraph-sdk==0.4.2
+langsmith==0.14.3
+fastapi==0.142.2
+uvicorn[standard]==0.54.0
+pydantic==2.13.5
+psycopg[binary]==3.3.6
+fastembed==0.8.1
